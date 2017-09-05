@@ -80,7 +80,7 @@
 					label: editor.lang.link.toolbar,
 					command: 'djangolink',
 					toolbar: 'djangolinks,10',
-                    'icon': 'link'
+                    'icon': 'DjangoLink'
 				} );
 			}
 
