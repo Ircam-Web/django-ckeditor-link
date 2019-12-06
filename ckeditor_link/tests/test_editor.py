@@ -1,28 +1,26 @@
 # -*- coding: utf-8 -*-
 from time import sleep
 
-from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.expected_conditions import visibility_of
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
 
-from ckeditor_link.tests.utils.selenium_utils import SeleniumTestCase, CustomWebDriver
-from ckeditor_link.tests.test_app.models import TestModel, LinkModel
+from ckeditor_link.tests.utils.selenium_utils import SeleniumTestCase
+from ckeditor_link.tests.test_app.models import TestModel
+
+
+# compat
+import django
+if django.VERSION[:2] < (1, 10):
+    from django.core.urlresolvers import reverse
+else:
+    from django.urls import reverse
 
 
 class ckeditor_linkEditorTests(SeleniumTestCase):
     fixtures = ['test_app.json', ]
-    username = 'admin'
-    password = 'admin'
 
     def setUp(self):
-        superuser = User.objects.create_superuser(self.username, 'admin@free.fr', self.password)
         self.existing = TestModel.objects.get(pk=1)
-        # Instantiating the WebDriver will load your browser
-        self.webdriver = CustomWebDriver()
+        super(ckeditor_linkEditorTests, self).setUp()
 
     def tearDown(self):
         self.webdriver.quit()
@@ -42,11 +40,11 @@ class ckeditor_linkEditorTests(SeleniumTestCase):
         sleep(1)  # #1 may ckeditor be very slow, so the click event is not handled?!
         button = self.webdriver.wait_for_css(".cke_button__djangolink")
         button[0].click()
-        dialog_title = self.webdriver.wait_for_css(".cke_dialog_title")
+        self.webdriver.wait_for_css(".cke_dialog_title")
         # sleep(2)  # argh
         iframe = self.webdriver.find_css(".cke_dialog_ui_html")
         self.webdriver.switch_to.frame(iframe)
-        target = self.webdriver.wait_for_css("#id_target")
+        self.webdriver.wait_for_css("#id_target")
 
     def test_dialog_form_validation(self):
         self.login()

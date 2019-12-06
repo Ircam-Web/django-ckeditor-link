@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.db import models
+from django.forms import widgets
 from django.http import JsonResponse
 
 
@@ -12,6 +14,17 @@ class DjangoLinkAdmin(admin.ModelAdmin):
         Return empty perms dict thus hiding the model from admin index.
         """
         return {}
+
+    @property
+    def media(self):
+        original_media = super(DjangoLinkAdmin, self).media
+        css = {
+            'all': (
+                settings.STATIC_URL + 'admin/ckeditor_link/css/link_admin.css',
+            )
+        }
+        new_media = widgets.Media(css=css)
+        return original_media + new_media
 
     def get_urls(self):
         """
@@ -59,3 +72,9 @@ class DjangoLinkAdmin(admin.ModelAdmin):
         no save!
         """
         return False
+
+    def get_changeform_initial_data(self, request):
+        initial = super(DjangoLinkAdmin, self).get_changeform_initial_data(request)
+        if request.GET.get('page', None):
+            initial['cms_page'] = request.GET.get('page')
+        return initial

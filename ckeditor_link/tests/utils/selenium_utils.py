@@ -1,15 +1,18 @@
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.core.urlresolvers import reverse
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 
 
-#determine the WebDriver module. default to Firefox
-try:
-    web_driver_module = settings.SELENIUM_WEBDRIVER
-except AttributeError:
-    from selenium.webdriver.firefox import webdriver as web_driver_module
+# compat
+import django
+if django.VERSION[:2] < (1, 10):
+    from django.core.urlresolvers import reverse
+else:
+    from django.urls import reverse
 
 
 class SeleniumTestCase(StaticLiveServerTestCase):
@@ -17,6 +20,18 @@ class SeleniumTestCase(StaticLiveServerTestCase):
     A base test case for Selenium, providing hepler methods for generating
     clients and logging in profiles.
     """
+
+    username = 'admin'
+    password = 'admin'
+
+    def setUp(self):
+        User.objects.create_superuser(self.username, 'admin@free.fr', self.password)
+        # Instantiating the WebDriver will load your browser
+        options = Options()
+        if settings.HEADLESS_TESTING:
+            options.add_argument("--headless")
+        self.webdriver = CustomWebDriver(firefox_options=options, )
+
     def open(self, url):
         self.webdriver.get("%s%s" % (self.live_server_url, url))
 
@@ -38,7 +53,7 @@ class SeleniumTestCase(StaticLiveServerTestCase):
         self.webdriver.wait_for_css("body.dashboard")
 
 
-class CustomWebDriver(web_driver_module.WebDriver):
+class CustomWebDriver(webdriver.Firefox):
     """Our own WebDriver with some helpers added"""
 
     def find_css(self, css_selector):
@@ -53,8 +68,8 @@ class CustomWebDriver(web_driver_module.WebDriver):
 
     def wait_for_css(self, css_selector, timeout=4):
         """ Shortcut for WebDriverWait"""
-        return WebDriverWait(self, timeout).until(lambda driver : driver.find_css(css_selector))
+        return WebDriverWait(self, timeout).until(lambda driver: driver.find_css(css_selector))
 
     def wait_for_iframe(self, iframe_selector, timeout=4):
         """ Shortcut for WebDriverWait"""
-        return WebDriverWait(self, timeout).until(lambda driver : driver.frame_to_be_available_and_switch_to_it())
+        return WebDriverWait(self, timeout).until(lambda driver: driver.frame_to_be_available_and_switch_to_it())

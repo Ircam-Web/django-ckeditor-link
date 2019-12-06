@@ -1,21 +1,30 @@
 """Settings that need to be set in order to run the tests."""
 import os
-import sys
+# import sys
 import tempfile
 import logging
 
-from django.core.urlresolvers import reverse_lazy
+# compat
+import django
+if django.VERSION[:2] < (1, 10):
+    from django.core.urlresolvers import reverse_lazy
+else:
+    from django.urls import reverse_lazy
 
 
 DEBUG = True
 
 logging.getLogger("factory").setLevel(logging.WARN)
 
-# from selenium.webdriver.firefox import webdriver
-from selenium.webdriver.phantomjs import webdriver
-SELENIUM_WEBDRIVER = webdriver
+HEADLESS_TESTING = True
 
 
+CKEDITOR_LINK_USE_CMS_FILER = True
+
+# not a good example, but working for our tests
+CKEDITOR_LINK_ATTR_MODIFIERS = {
+    'target': '{target}--xy',
+}
 CKEDITOR_LINK_MODEL = 'ckeditor_link.tests.test_app.models.LinkModel'
 CKEDITOR_LINK_IFRAME_URL = reverse_lazy('admin:test_app_linkmodel_add')
 CKEDITOR_LINK_VERIFY_URL = reverse_lazy('admin:test_app_linkmodel_verify')
@@ -52,6 +61,10 @@ CKEDITOR_CONFIGS = {
     }
 }
 
+CMS_TEMPLATES = (
+    ('cms_dummy.html', 'Dummy'),
+)
+
 SITE_ID = 1
 
 APP_ROOT = os.path.abspath(
@@ -66,7 +79,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en'
 LANGUAGES = (
-    ('en', 'ENGLISHS' ),
+    ('en', 'ENGLISHS', ),
 )
 
 ROOT_URLCONF = 'ckeditor_link.tests.urls'
@@ -103,9 +116,12 @@ EXTERNAL_APPS = (
     'django.contrib.sites',
     'ckeditor',
     # 'djangocms_text_ckeditor',
-    # 'cms',
-    # 'treebeard',
-    # 'menus',
+    'cms',
+    'treebeard',
+    'menus',
+    'filer',
+    'sekizai',
+    'easy_thumbnails',
 )
 
 TEMPLATES = [
@@ -120,6 +136,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
+                'sekizai.context_processors.sekizai',
+                'cms.context_processors.cms_settings',
             ],
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
@@ -133,10 +151,11 @@ TEMPLATES = [
 
 INTERNAL_APPS = (
     'ckeditor_link',
+    # 'ckeditor_link',
     'ckeditor_link.tests.test_app',
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -144,6 +163,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 )
+
+MIDDLEWARE_CLASSES = MIDDLEWARE
 
 INSTALLED_APPS = EXTERNAL_APPS + INTERNAL_APPS
 COVERAGE_MODULE_EXCLUDES += EXTERNAL_APPS

@@ -2,6 +2,7 @@
 from setuptools import setup, find_packages
 import os
 
+
 # not so bad: http://joebergantine.com/blog/2015/jul/17/releasing-package-pypi/
 version = __import__('ckeditor_link').__version__
 
@@ -10,13 +11,14 @@ def read(fname):
     # read the contents of a text file
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 setup(
     name="django-ckeditor-link",
     version=version,
     url='http://github.com/bnzk/django-ckeditor-link',
     license='MIT',
     platforms=['OS Independent'],
-    description="better link dialog for ckeditor",
+    description="alternative link dialog for ckeditor 4, in django modeladmin forms",
     long_description=read('PYPI.rst'),
     author=u'Ben Stähli',
     author_email='bnzk@bnzk.ch',

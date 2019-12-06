@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
-from django.core.urlresolvers import reverse
 from django.test import Client
 from django.test import TestCase
 
-from ckeditor_link.tests.test_app.models import TestModel, LinkModel
+from ckeditor_link.tests.test_app.models import TestModel
+
+# compat
+import django
+if django.VERSION[:2] < (1, 10):
+    from django.core.urlresolvers import reverse
+else:
+    from django.urls import reverse
 
 
-class ckeditor_linkDialogTests(TestCase):
+class CKeditorLinkTemplateTagTests(TestCase):
     fixtures = ['test_app.json', ]
 
     def setUp(self):
         self.test_object = TestModel.objects.get(pk=2)
+        self.test_object_not_existing_fk = TestModel.objects.get(pk=1)
 
     def tearDown(self):
         pass
@@ -22,8 +29,8 @@ class ckeditor_linkDialogTests(TestCase):
         client = Client()
         url = reverse('testmodel_detail', args=[self.test_object.id])
         response = client.get(url)
-        content = response.content
         # check it!
+        self.assertEqual(response.status_code, 200)
 
     def test_tag_no_destruction_of_existing_links(self):
         """
@@ -38,5 +45,25 @@ class ckeditor_linkDialogTests(TestCase):
         client = Client()
         url = reverse('testmodel_detail', args=[self.test_object.id])
         response = client.get(url)
-        content = response.content
         # check it!
+        self.assertEqual(response.status_code, 200)
+
+    def test_not_existing_foreign_key_value(self):
+        """
+        can it handle no more existing foreign key values set in links?
+        """
+        client = Client()
+        url = reverse('testmodel_detail', args=[self.test_object_not_existing_fk.id])
+        response = client.get(url)
+        # no exception, there we go!
+        self.assertEqual(response.status_code, 200)
+
+    def test_tag_attr_modifiers(self):
+        """
+        do attr modifiers work?
+        has data-target="targetvalue", needs <a href="targetvalue--xy"
+        """
+        client = Client()
+        url = reverse('testmodel_detail', args=[self.test_object.id])
+        response = client.get(url)
+        self.assertContains(response, 'href="targetvalue--xy"')
